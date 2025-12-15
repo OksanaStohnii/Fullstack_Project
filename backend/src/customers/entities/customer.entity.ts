@@ -21,4 +21,7 @@ export class Customer {
 
   @OneToMany(() => Order, (order) => order.customer)
   orders: Order[];
+
+  @Column({ select: false })
+  passwordHash: string;
 }

@@ -25,9 +25,9 @@ export class OrdersService {
     private readonly productsRepo: Repository<Product>,
   ) {}
 
-  async create(dto: CreateOrderDto) {
+  async create(dto: CreateOrderDto, customerId: number) {
     const customer = await this.customersRepo.findOne({
-      where: { id: dto.customerId },
+      where: { id: customerId },
     });
     if (!customer) throw new NotFoundException('Customer not found');
 
@@ -54,7 +54,7 @@ export class OrdersService {
     );
 
     const order = this.ordersRepo.create({
-      customerId: dto.customerId,
+      customerId: customerId,
       totalPrice,
       items,
     });
@@ -62,24 +62,25 @@ export class OrdersService {
     return this.ordersRepo.save(order);
   }
 
-  findAll() {
-    return this.ordersRepo.find({ relations: ['items'] });
+  findAll(customerId: number) {
+    return this.ordersRepo.find({
+      where: { customerId },
+      relations: ['items'],
+      order: { id: 'DESC' },
+    });
   }
 
-  async findOne(id: number) {
+  async findOne(customerId: number, id: number) {
     const order = await this.ordersRepo.findOne({
-      where: { id },
+      where: { id, customerId },
       relations: ['items'],
     });
     if (!order) throw new NotFoundException('Order not found');
     return order;
   }
 
-  async update(id: number, dto: UpdateOrderDto) {
-    const existing = await this.ordersRepo.findOne({
-      where: { id },
-      relations: ['items'],
-    });
+  async update(customerId: number, id: number, dto: UpdateOrderDto) {
+    const existing = await this.findOne(customerId, id);
     if (!existing) throw new NotFoundException('Order not found');
 
     if (dto.items) {
@@ -114,8 +115,8 @@ export class OrdersService {
     return this.ordersRepo.save(existing);
   }
 
-  async remove(id: number) {
-    const order = await this.ordersRepo.findOne({ where: { id } });
+  async remove(customerId: number, id: number) {
+    const order = await this.findOne(customerId, id);
     if (!order) throw new NotFoundException('Order not found');
 
     await this.ordersRepo.remove(order);
