@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { productsApi } from "@/api/productsApi";
 import type { Product } from "@/types/product";
 import ProductForm from "@/app/components/products/ProductForm";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default function EditProductPage({ params }: Props) {
   const router = useRouter();
-  const productId = Number(params.id);
+  const { id } = use(params);
+  const productId = Number(id);
+  console.log("productId", productId);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
